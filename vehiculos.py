@@ -1,6 +1,7 @@
 import requests
 import json
 import time
+import random
 from peewee import *
 
 db = SqliteDatabase('rutas.db')
@@ -36,6 +37,7 @@ class Vehiculo:
         self._latitud = latitud
         self._longitud = longitud
         self._gasolina = gasolina
+        self._pasajeros = 0
 
     def conducir(self):
         self.set_ubicacion(self._ruta[self._indice_ruta].latitud, self._ruta[self._indice_ruta].longitud)
@@ -55,8 +57,11 @@ class Vehiculo:
     def reportar(self):
         headers = {'content-type': 'application/json', 'X-Auth-Token' : TOKEN}
 
-        data = {'value': str(self._gasolina), 'context':'{"latitud":"'
-                +str(self._latitud)+'", "longitud":"'+str(self._longitud)+'"}'}
+        data = {'value': str(self._gasolina),'context':
+                '{"latitud":"'+str(self._latitud)
+                +'","longitud":"'+str(self._longitud)
+                +'","pasajeros":"'+str(self._pasajeros)
+                +'"}'}
 
         response = requests.post(URL_API + self._url, data=json.dumps(data), 
                                 headers = headers)
@@ -78,6 +83,21 @@ class Vehiculo:
     def _llenar_tanque(self):
         self._gasolina= 100
 
+    def set_pasajeros(self, pasajeros):
+
+        if pasajeros <= 45 and pasajeros >= 0:
+            self._pasajeros = pasajeros
+
+    
+    def actualizar_pasajeros(self):
+        value = random.randint(1,5)
+        if value % 2 == 0:
+            self.set_pasajeros(self._pasajeros - value)
+        else:
+            self.set_pasajeros(self._pasajeros + value)
+
+
+
 
 
 vehiculos = []
@@ -93,5 +113,6 @@ if __name__ == "__main__":
     while True:
         for vehiculo in vehiculos:
             vehiculo.conducir()
+            vehiculo.actualizar_pasajeros()
             vehiculo.reportar()
-        time.sleep(2)
+        time.sleep(5)
